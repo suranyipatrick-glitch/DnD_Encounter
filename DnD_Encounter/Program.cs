@@ -6,6 +6,8 @@ using System.Runtime.Remoting.Metadata.W3cXsd2001;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Linq;
+using static System.Net.Mime.MediaTypeNames;
 using static DnD_Encounter.Program;
 
 namespace DnD_Encounter
@@ -20,97 +22,124 @@ namespace DnD_Encounter
             }
         }
 
+        public static bool IsValidTarget(List<Entity> entities, string isAttacked)
+        {
+            
+            for (int i = 0; i < entities.Count; i++)
+            {
+                if (isAttacked == entities[i].Name)
+                {
+                    return true;
+                }
+            }
+            Console.WriteLine("Nincs ilyen nevű játékos/monster");
+            return false;
+        }
+
+        public static bool IsValidNumber(string damageStr)
+        {
+            int damage = 0;
+            try
+            {
+                damage = int.Parse(damageStr);
+            }
+            catch (FormatException)
+            {
+                Console.WriteLine("Számot adj meg damage-nek!");
+                return false;
+            }
+            if (damage < 0)
+            {
+                Console.WriteLine("Pozitív számot adj meg!");
+                return false;
+            } else {
+                return true;    
+            }
+        }
+
         public class Entity
         {
-            public static void Attack (List <Entity> entities, int attackerIndex)
-            {  
-                bool tryAgain = true;
-                while (tryAgain)
+            public static void Attack(List<Entity> entities, int attackerIndex)
+            {
+                bool isValid = false;
+                int damage = 0;
+                string isAttacked = "";
+
+                while (!isValid)
                 {
                     for (int i = 0; i < entities.Count; i++)
                     {
                         Console.WriteLine(entities[i].Name);
                     }
-                    try
-                    {
-                        Console.WriteLine("Kit támadsz?");
-                        string isAttacked = Console.ReadLine();
-                        Console.WriteLine("Mennyit sebzel?");
-                        int damage = int.Parse(Console.ReadLine());
+                    Console.WriteLine("Kit támadsz?");
+                    isAttacked = Console.ReadLine();
+                    isValid = IsValidTarget(entities, isAttacked);
+                }
 
-                        bool playerFound = false;
-                        for (int i = 0; i < entities.Count; i++)
-                        {
-                            if (isAttacked == entities[i].Name)
-                            {
-                                entities[i].TempHealth -= damage;
-                                Console.WriteLine($"{entities[attackerIndex].Name} megtámadta {entities[i].Name}-t");
-                                playerFound = true;
-                                break;
-                            }                            
-                        }
-                        if (!playerFound)
-                        {
-                            throw new PlayerNotFoundException();
-                        }
-                        tryAgain = false;
-                    } catch (FormatException)
+                isValid = false;
+                while (!isValid)
+                {
+                    Console.WriteLine("Mennyit sebzel?");
+                    string damageStr = Console.ReadLine();
+                    if (IsValidNumber(damageStr))
                     {
-                        Console.Clear();
-                        Console.WriteLine("Számot adj meg damage-nek");
-
-                    } catch (PlayerNotFoundException ex)
-                    {
-                        Console.Clear();
-                        Console.WriteLine(ex.Message);
+                        damage = int.Parse(damageStr);
+                        isValid = true;
                     }
                 }
-                
-                
-            }
+
+                for (int i = 0; i < entities.Count; i++)
+                {
+                    if (isAttacked == entities[i].Name)
+                    {
+                        entities[i].TempHealth -= damage;
+                        Console.WriteLine($"{entities[attackerIndex].Name} megtámadta {entities[i].Name}-t");
+                        break;
+                    }
+                }
+
+            }            
             public static void Heal (List<Entity> entities, int healerIndex)
             {
-                bool tryAgain = true;
-                while (tryAgain)
+                bool isValid = false;
+                int damage = 0;
+                string isAttacked = "";
+
+                while (!isValid)
                 {
                     for (int i = 0; i < entities.Count; i++)
                     {
                         Console.WriteLine(entities[i].Name);
                     }
-                    try
-                    {
-                        Console.WriteLine("Kit healelsz?");
-                        string isHealed = Console.ReadLine();
-                        Console.WriteLine("Mennyit healelsz?");
-                        int heal = int.Parse(Console.ReadLine());
+                    Console.WriteLine("Kit healelsz?");
+                    isAttacked = Console.ReadLine();
+                    isValid = IsValidTarget(entities, isAttacked);
+                }
 
-                        bool playerFound = false;
-                        for (int i = 0; i < entities.Count; i++)
-                        {
-                            if (isHealed == entities[i].Name)
-                            {
-                                entities[i].TempHealth += heal;
-                                Console.WriteLine($"{entities[healerIndex].Name} healelte {entities[i].Name}-t");
-                                playerFound = true;
-                                break;
-                            }
-                        }
-                        if (!playerFound)
-                        {
-                            throw new PlayerNotFoundException();
-                        }
-                        tryAgain = false;
-                    }
-                    catch (FormatException)
+                isValid = false;
+                while (!isValid)
+                {
+                    Console.WriteLine("Mennyit healelsz?");
+                    string damageStr = Console.ReadLine();
+                    if (IsValidNumber(damageStr))
                     {
-                        Console.Clear();
-                        Console.WriteLine("Számot adj meg damage-nek");
+                        damage = int.Parse(damageStr);
+                        isValid = true;
+                    }
+                }
 
-                    }
-                    catch (PlayerNotFoundException ex)
+                for (int i = 0; i < entities.Count; i++)
+                {
+                    if (isAttacked == entities[i].Name)
                     {
-                        Console.Clear();
-                        Console.WriteLine(ex.Message);
+                        entities[i].TempHealth += damage;
+                        if (entities[i].TempHealth > entities[i].Health)
+                        {
+                            entities[i].TempHealth = entities[i].Health;
+                        }
+                        
+                        Console.WriteLine($"{entities[healerIndex].Name} healelte {entities[i].Name}-t");
+                        break;
                     }
                 }
             }
@@ -134,30 +163,41 @@ namespace DnD_Encounter
             List<Player> players = new List<Player>();
             for (int i = 0; i < playerCount; i++)
             {
-                bool tryAgain = true;
+
+                Console.Clear();
                 Console.WriteLine($"{i + 1}. játékos neve?");
                 string name = Console.ReadLine();
 
-                while (tryAgain)
+                int health = 0;
+                int initiative = 0;
+                int tempHealth = 0;
+
+                bool isValid = false;
+                while (!isValid)
                 {
-                    try
+                    Console.WriteLine($"Mennyi {name} HP-ja?");
+                    string healthStr = Console.ReadLine();
+                    if (IsValidNumber(healthStr))
                     {
-                        Console.WriteLine($"Mennyi {name} HP-ja?");
-                        int health = int.Parse(Console.ReadLine());
-                        int tempHealth = health;
-                        Console.WriteLine($"Mennyi {name} initiative-je?");
-                        int initiative = int.Parse(Console.ReadLine());
-
-                        players.Add(new Player { Name = name, Health = health, TempHealth = tempHealth, Initiative = initiative });
-                        tryAgain = false;
-                        Console.Clear();
+                        health = int.Parse(healthStr);
+                        tempHealth = health;
+                        isValid = true;
                     }
-                    catch (FormatException)
-                    {
-                        Console.WriteLine("Számot adj meg HP/initiative-nek!");
-                    }
-
                 }
+                isValid = false;
+                while (!isValid)
+                {
+                    Console.WriteLine($"Mennyi {name} initiative-je?");
+                    string initiativeStr = Console.ReadLine();
+                    if (IsValidNumber(initiativeStr))
+                    {
+                        initiative = int.Parse(initiativeStr);
+                        isValid = true;
+                    }
+                }
+
+                players.Add(new Player { Name = name, Health = health, TempHealth = tempHealth, Initiative = initiative });
+                Console.Clear(); 
             }
             return players;
         }
@@ -168,28 +208,40 @@ namespace DnD_Encounter
 
             for (int i = 0; i < monsterCount; i++)
             {
-                bool tryAgain = true;
+                Console.Clear();
                 Console.WriteLine($"{i + 1}. monster neve?");
                 string name = Console.ReadLine();
-                while (tryAgain)
-                {
-                    try
-                    {
-                        Console.WriteLine($"Mennyi a {name} HP-ja?");
-                        int health = int.Parse(Console.ReadLine());
-                        int tempHealth = health;
-                        Console.WriteLine($"Mennyi a {name} initiative-je?");
-                        int initiative = int.Parse(Console.ReadLine());
-                        Console.Clear();
-                        monsters.Add(new Monster { Name = name, Health = health, TempHealth = tempHealth, Initiative = initiative });
-                        tryAgain = false;
 
-                    }
-                    catch (FormatException)
+                int health = 0;
+                int initiative = 0;
+                int tempHealth = 0;
+
+                bool isValid = false;
+                while (!isValid)
+                {
+                    Console.WriteLine($"Mennyi {name} HP-ja?");
+                    string healthStr = Console.ReadLine();
+                    if (IsValidNumber(healthStr))
                     {
-                        Console.WriteLine("Számot adj meg HP/initiative-nek!");
+                        health = int.Parse(healthStr);
+                        tempHealth = health;
+                        isValid = true;
                     }
                 }
+                isValid = false;
+                while (!isValid)
+                {
+                    Console.WriteLine($"Mennyi {name} initiative-je?");
+                    string initiativeStr = Console.ReadLine();
+                    if (IsValidNumber(initiativeStr))
+                    {
+                        initiative = int.Parse(initiativeStr);
+                        isValid = true;
+                    }
+                }
+
+                Console.Clear();
+                monsters.Add(new Monster { Name = name, Health = health, TempHealth = tempHealth, Initiative = initiative });
             }
             return monsters;
         }
@@ -227,47 +279,45 @@ namespace DnD_Encounter
             }
         }
 
+        
+
         static void Main(string[] args)
         {
             Console.WriteLine("DnD Encounter");
+
             int playerCount = 0;
             List<Player> players = new List<Player>();
 
-            bool tryAgain = true;
-            while (tryAgain)
+            bool isValid = false;
+            while (!isValid)
             {
-                try
+                Console.WriteLine("Mennyi játekos?");
+                string playerCountStr = Console.ReadLine();
+                if (IsValidNumber(playerCountStr))
                 {
-                    Console.WriteLine("Mennyi játékos?");
-                    playerCount = int.Parse(Console.ReadLine());
-                    players = InitialisePlayers(playerCount);
-                    tryAgain = false;
-                }
-                catch (FormatException)
-                {
-                    Console.WriteLine("Számot adj meg!");
+                    playerCount  = int.Parse(playerCountStr);
+                    isValid = true;
                 }
             }
+
+            players = InitialisePlayers(playerCount);
 
             int monsterCount = 0;
             List<Monster> monsters = new List<Monster>();
 
-            tryAgain = true;
-            while (tryAgain)
+            isValid = false;
+            while (!isValid)
             {
-                try
+                Console.WriteLine("Mennyi monster?");
+                string monsterCountStr = Console.ReadLine();
+                if (IsValidNumber(monsterCountStr))
                 {
-                    Console.WriteLine("Mennyi monster?");
-                    monsterCount = int.Parse(Console.ReadLine());
-                    monsters = InitialiseMonster(monsterCount);
-                    tryAgain = false;
+                    monsterCount = int.Parse(monsterCountStr);
+                    isValid = true;
                 }
-
-                catch (FormatException)
-                {
-                    Console.WriteLine("Számot adj meg!");
-                }
+                
             }
+            monsters = InitialiseMonster(monsterCount);
 
             DisplayPlayers(playerCount, players);
             DisplayMonsters(monsterCount, monsters);
@@ -285,6 +335,15 @@ namespace DnD_Encounter
                 Console.WriteLine();
                 int  roundCount = 1;
                 Console.WriteLine($"{roundCount}. kör");
+                for (int i = 0; i < monsters.Count; i++)
+                {
+                    encounterActive = false;
+                    if (monsters[i].TempHealth > 0)
+                    {
+                        encounterActive = true;
+                        break;
+                    }
+                }
                 for (int i = 0; i < entities.Count; i++)
                 {
                     if (entities[i].TempHealth < 0)
@@ -311,16 +370,7 @@ namespace DnD_Encounter
                     }
                     DisplayPlayers(playerCount, players);
                     DisplayMonsters(monsterCount, monsters);
-                }
-                for (int i = 0;i < monsters.Count; i++)
-                {
-                    encounterActive = false;
-                    if (monsters[i].TempHealth > 0)
-                    {
-                        encounterActive = true;
-                        break;
-                    }
-                }
+                }               
 
             }
             Console.Clear ();
