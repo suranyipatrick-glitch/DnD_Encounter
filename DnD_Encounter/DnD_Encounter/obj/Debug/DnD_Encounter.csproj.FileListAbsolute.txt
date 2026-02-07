@@ -1,0 +1,8 @@
+C:\Users\Gamer PC\source\repos\DnD_Encounter\DnD_Encounter\obj\Debug\DnD_Encounter.csproj.AssemblyReference.cache
+C:\Users\Gamer PC\source\repos\DnD_Encounter\DnD_Encounter\obj\Debug\DnD_Encounter.csproj.CoreCompileInputs.cache
+C:\Users\Gamer PC\source\repos\DnD_Encounter\DnD_Encounter\bin\Debug\DnD_Encounter.exe.config
+C:\Users\Gamer PC\source\repos\DnD_Encounter\DnD_Encounter\bin\Debug\DnD_Encounter.exe
+C:\Users\Gamer PC\source\repos\DnD_Encounter\DnD_Encounter\bin\Debug\DnD_Encounter.pdb
+C:\Users\Gamer PC\source\repos\DnD_Encounter\DnD_Encounter\obj\Debug\DnD_Encounter.exe
+C:\Users\Gamer PC\source\repos\DnD_Encounter\DnD_Encounter\obj\Debug\DnD_Encounter.pdb
+C:\Users\Gamer PC\source\repos\DnD_Encounter\DnD_Encounter\obj\Debug\DnD_Encounter.exe.config
